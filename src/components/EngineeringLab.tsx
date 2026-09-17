@@ -70,7 +70,7 @@ export default function EngineeringLab() {
                             Eu não apenas uso
                             <br />
                             tecnologias.
-                            <span className="text-zinc-600"> Eu testo ideias.</span>
+                            <span className="text-zinc-400"> Eu testo ideias.</span>
                         </h2>
                     </div>
 
