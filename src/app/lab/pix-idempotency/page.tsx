@@ -324,17 +324,14 @@ export default function PixIdempotencyLab() {
 
                             <pre className="overflow-x-auto p-6 font-mono text-sm leading-7 text-zinc-400">
                                 <code>{`INSERT INTO pix_idempotency (
-                                            idempotency_key,
-                                            request_hash,
-                                            created_at
-                                        )
-                                        VALUES (
-                                            :idempotencyKey,
-                                            :requestHash,
-                                            CURRENT_TIMESTAMP
-                                        )
-                                        ON CONFLICT (idempotency_key)
-                                        DO NOTHING;`}
+    idempotency_key,
+    request_hash,
+    created_at
+) VALUES (
+    :idempotencyKey,
+    :requestHash,
+    CURRENT_TIMESTAMP
+) ON CONFLICT (idempotency_key) DO NOTHING;`}
                                 </code>
                             </pre>
 
@@ -349,6 +346,146 @@ export default function PixIdempotencyLab() {
                             </div>
 
                         </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            {/* RESULT */}
+            <section className="border-t border-zinc-900">
+                <div className="mx-auto max-w-7xl px-6 py-28">
+
+                    <div className="grid gap-10 lg:grid-cols-2">
+
+                        <div>
+                            <p className="font-mono text-sm text-emerald-400">
+                                05 / RESULT
+                            </p>
+
+                            <h2 className="mt-5 text-4xl font-bold tracking-tight">
+                                O mesmo retry não precisa
+                                <br />
+                                virar uma nova transação.
+                            </h2>
+                        </div>
+
+                        <p className="max-w-xl leading-8 text-zinc-500">
+                            A combinação entre Idempotency-Key, request hash e
+                            restrição de unicidade permite distinguir uma nova
+                            operação de uma tentativa repetida.
+                        </p>
+
+                    </div>
+
+                    {/* SCENARIOS */}
+                    <div className="mt-16 grid gap-6 lg:grid-cols-3">
+
+                        <ResultScenario
+                            number="01"
+                            label="NEW KEY"
+                            title="Nova operação"
+                            description="A chave é reservada, o PIX é processado e a transação criada é associada ao registro de idempotência."
+                            result="PROCESS PIX"
+                        />
+
+                        <ResultScenario
+                            number="02"
+                            label="SAME KEY + SAME HASH"
+                            title="Retry compatível"
+                            description="A chave já existe e o conteúdo corresponde à operação anterior. A transação associada é recuperada."
+                            result="RETURN EXISTING"
+                        />
+
+                        <ResultScenario
+                            number="03"
+                            label="SAME KEY + DIFFERENT HASH"
+                            title="Uso conflitante"
+                            description="A mesma chave foi reutilizada com dados diferentes. A API rejeita a operação."
+                            result="CONFLICT"
+                            warning
+                        />
+
+                    </div>
+
+                    {/* FINAL FLOW */}
+                    <div className="mt-16 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+
+                        <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-5">
+
+                            <span className="font-mono text-xs text-zinc-500">
+                                IDEMPOTENCY DECISION
+                            </span>
+
+                            <span className="font-mono text-xs text-emerald-400">
+                                FINAL FLOW
+                            </span>
+
+                        </div>
+
+                        <div className="p-6 sm:p-10">
+
+                            <div className="grid items-center gap-4 lg:grid-cols-[1fr_auto_1fr_auto_1fr]">
+
+                                <FinalNode
+                                    title="PIX REQUEST"
+                                    subtitle="Idempotency-Key"
+                                />
+
+                                <FinalArrow />
+
+                                <FinalNode
+                                    title="REQUEST HASH"
+                                    subtitle="SHA-256"
+                                />
+
+                                <FinalArrow />
+
+                                <FinalNode
+                                    title="POSTGRESQL"
+                                    subtitle="Atomic reservation"
+                                    active
+                                />
+
+                            </div>
+
+                            <div className="mt-10 grid gap-4 md:grid-cols-3">
+
+                                <FinalResult
+                                    title="NEW"
+                                    value="PROCESS"
+                                />
+
+                                <FinalResult
+                                    title="RETRY"
+                                    value="REUSE"
+                                />
+
+                                <FinalResult
+                                    title="CONFLICT"
+                                    value="REJECT"
+                                    warning
+                                />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {/* TAKEAWAY */}
+                    <div className="mt-16 border-l border-emerald-400 pl-6">
+
+                        <p className="font-mono text-xs text-emerald-400">
+                            ENGINEERING TAKEAWAY
+                        </p>
+
+                        <p className="mt-4 max-w-3xl text-lg leading-8 text-zinc-400">
+                            Idempotência não significa apenas bloquear requisições
+                            duplicadas. A API precisa reconhecer quando uma repetição
+                            representa a mesma intenção e quando a mesma chave está
+                            sendo reutilizada para uma operação diferente.
+                        </p>
 
                     </div>
 
@@ -659,39 +796,176 @@ function DecisionPath({
 }
 
 function ReservationResult({
-  value,
-  title,
-  description,
-  warning = false,
+    value,
+    title,
+    description,
+    warning = false,
 }: {
-  value: string;
-  title: string;
-  description: string;
-  warning?: boolean;
+    value: string;
+    title: string;
+    description: string;
+    warning?: boolean;
 }) {
-  return (
-    <div className="flex gap-5 rounded-lg border border-zinc-800 bg-zinc-950 p-5">
+    return (
+        <div className="flex gap-5 rounded-lg border border-zinc-800 bg-zinc-950 p-5">
 
-      <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded font-mono text-sm ${
-          warning
-            ? "bg-amber-400/10 text-amber-400"
-            : "bg-emerald-400/10 text-emerald-400"
-        }`}
-      >
-        {value}
-      </div>
+            <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded font-mono text-sm ${warning
+                    ? "bg-amber-400/10 text-amber-400"
+                    : "bg-emerald-400/10 text-emerald-400"
+                    }`}
+            >
+                {value}
+            </div>
 
-      <div>
-        <p className="font-mono text-sm text-zinc-300">
-          {title}
-        </p>
+            <div>
+                <p className="font-mono text-sm text-zinc-300">
+                    {title}
+                </p>
 
-        <p className="mt-2 text-sm leading-6 text-zinc-500">
-          {description}
-        </p>
-      </div>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">
+                    {description}
+                </p>
+            </div>
 
-    </div>
-  );
+        </div>
+    );
+}
+
+function ResultScenario({
+    number,
+    label,
+    title,
+    description,
+    result,
+    warning = false,
+}: {
+    number: string;
+    label: string;
+    title: string;
+    description: string;
+    result: string;
+    warning?: boolean;
+}) {
+    return (
+        <div
+            className={`rounded-xl border p-6 ${warning
+                    ? "border-amber-400/20 bg-amber-400/5"
+                    : "border-zinc-800 bg-zinc-950"
+                }`}
+        >
+            <div className="flex items-center justify-between">
+
+                <span className="font-mono text-xs text-zinc-600">
+                    {number}
+                </span>
+
+                <span
+                    className={`font-mono text-[10px] ${warning
+                            ? "text-amber-400"
+                            : "text-emerald-400"
+                        }`}
+                >
+                    {label}
+                </span>
+
+            </div>
+
+            <h3 className="mt-10 text-xl font-semibold text-zinc-200">
+                {title}
+            </h3>
+
+            <p className="mt-4 min-h-24 text-sm leading-6 text-zinc-500">
+                {description}
+            </p>
+
+            <div className="mt-8 border-t border-zinc-800 pt-5">
+
+                <span className="font-mono text-[10px] text-zinc-600">
+                    RESULT
+                </span>
+
+                <p
+                    className={`mt-2 font-mono text-sm ${warning
+                            ? "text-amber-400"
+                            : "text-emerald-400"
+                        }`}
+                >
+                    {result}
+                </p>
+
+            </div>
+
+        </div>
+    );
+}
+
+function FinalNode({
+    title,
+    subtitle,
+    active = false,
+}: {
+    title: string;
+    subtitle: string;
+    active?: boolean;
+}) {
+    return (
+        <div
+            className={`rounded-lg border p-6 text-center ${active
+                    ? "border-emerald-400/30 bg-emerald-400/5"
+                    : "border-zinc-800 bg-zinc-900/30"
+                }`}
+        >
+            <p
+                className={`font-mono text-sm ${active
+                        ? "text-emerald-400"
+                        : "text-zinc-300"
+                    }`}
+            >
+                {title}
+            </p>
+
+            <p className="mt-2 font-mono text-xs text-zinc-600">
+                {subtitle}
+            </p>
+
+        </div>
+    );
+}
+
+function FinalArrow() {
+    return (
+        <div className="text-center font-mono text-emerald-400">
+            →
+        </div>
+    );
+}
+
+function FinalResult({
+    title,
+    value,
+    warning = false,
+}: {
+    title: string;
+    value: string;
+    warning?: boolean;
+}) {
+    return (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+
+            <p className="font-mono text-[10px] text-zinc-600">
+                {title}
+            </p>
+
+            <p
+                className={`mt-3 font-mono text-sm ${warning
+                        ? "text-amber-400"
+                        : "text-emerald-400"
+                    }`}
+            >
+                {value}
+            </p>
+
+        </div>
+    );
 }
