@@ -269,6 +269,92 @@ export default function PixIdempotencyLab() {
                 </div>
             </section>
 
+            {/* ATOMIC RESERVATION */}
+            <section className="border-t border-zinc-900">
+                <div className="mx-auto max-w-7xl px-6 py-28">
+
+                    <div className="grid gap-12 lg:grid-cols-2">
+
+                        <div>
+                            <p className="font-mono text-sm text-emerald-400">
+                                04 / ATOMIC RESERVATION
+                            </p>
+
+                            <h2 className="mt-5 text-4xl font-bold tracking-tight">
+                                Deixe o banco
+                                <br />
+                                decidir quem reservou.
+                            </h2>
+
+                            <p className="mt-8 max-w-xl leading-8 text-zinc-500">
+                                A Idempotency-Key possui uma restrição UNIQUE.
+                                A tentativa de reserva é feita diretamente no PostgreSQL
+                                utilizando ON CONFLICT DO NOTHING.
+                            </p>
+
+                            <div className="mt-10 space-y-4">
+
+                                <ReservationResult
+                                    value="1"
+                                    title="Reserva realizada"
+                                    description="A requisição continua para o processamento do PIX."
+                                />
+
+                                <ReservationResult
+                                    value="0"
+                                    title="Chave já existente"
+                                    description="A API recupera o registro existente e verifica o request hash."
+                                    warning
+                                />
+
+                            </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+
+                            <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
+                                <span className="font-mono text-xs text-zinc-500">
+                                    PixIdempotencyRepository.java
+                                </span>
+
+                                <span className="font-mono text-xs text-emerald-400">
+                                    PostgreSQL
+                                </span>
+                            </div>
+
+                            <pre className="overflow-x-auto p-6 font-mono text-sm leading-7 text-zinc-400">
+                                <code>{`INSERT INTO pix_idempotency (
+                                            idempotency_key,
+                                            request_hash,
+                                            created_at
+                                        )
+                                        VALUES (
+                                            :idempotencyKey,
+                                            :requestHash,
+                                            CURRENT_TIMESTAMP
+                                        )
+                                        ON CONFLICT (idempotency_key)
+                                        DO NOTHING;`}
+                                </code>
+                            </pre>
+
+                            <div className="border-t border-zinc-800 p-6">
+                                <p className="font-mono text-xs text-zinc-600">
+                                    DATABASE CONSTRAINT
+                                </p>
+
+                                <p className="mt-3 font-mono text-sm text-emerald-400">
+                                    UNIQUE (idempotency_key)
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
         </main>
     );
 }
@@ -472,8 +558,8 @@ function SolutionStep({
     return (
         <div
             className={`rounded-lg border p-6 ${active
-                    ? "border-emerald-400/30 bg-emerald-400/5"
-                    : "border-zinc-800 bg-zinc-900/30"
+                ? "border-emerald-400/30 bg-emerald-400/5"
+                : "border-zinc-800 bg-zinc-900/30"
                 }`}
         >
             <div className="flex gap-5">
@@ -529,15 +615,15 @@ function DecisionPath({
     return (
         <div
             className={`rounded-xl border p-6 ${warning
-                    ? "border-amber-400/20 bg-amber-400/5"
-                    : "border-emerald-400/20 bg-emerald-400/5"
+                ? "border-amber-400/20 bg-amber-400/5"
+                : "border-emerald-400/20 bg-emerald-400/5"
                 }`}
         >
 
             <p
                 className={`font-mono text-xs ${warning
-                        ? "text-amber-400"
-                        : "text-emerald-400"
+                    ? "text-amber-400"
+                    : "text-emerald-400"
                     }`}
             >
                 {status}
@@ -570,4 +656,42 @@ function DecisionPath({
 
         </div>
     );
+}
+
+function ReservationResult({
+  value,
+  title,
+  description,
+  warning = false,
+}: {
+  value: string;
+  title: string;
+  description: string;
+  warning?: boolean;
+}) {
+  return (
+    <div className="flex gap-5 rounded-lg border border-zinc-800 bg-zinc-950 p-5">
+
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded font-mono text-sm ${
+          warning
+            ? "bg-amber-400/10 text-amber-400"
+            : "bg-emerald-400/10 text-emerald-400"
+        }`}
+      >
+        {value}
+      </div>
+
+      <div>
+        <p className="font-mono text-sm text-zinc-300">
+          {title}
+        </p>
+
+        <p className="mt-2 text-sm leading-6 text-zinc-500">
+          {description}
+        </p>
+      </div>
+
+    </div>
+  );
 }
