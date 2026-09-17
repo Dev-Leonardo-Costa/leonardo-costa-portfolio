@@ -42,8 +42,17 @@ jobs:
       - name: Disable Jekyll
         run: touch ./out/.nojekyll
 
+      - name: Verify static export
+        run: |
+          echo "=== OUT ==="
+          ls -la ./out
+          echo "=== _NEXT ==="
+          ls -la ./out/_next
+          echo "=== STATIC FILES ==="
+          find ./out/_next/static -type f | head -30
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./out
 
