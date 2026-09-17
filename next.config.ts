@@ -1,17 +1,14 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
-
 const nextConfig: NextConfig = {
   output: "export",
-
-  basePath: isProd ? "/portfolio-leonardo" : "",
+  basePath: "/portfolio-leonardo",
+  assetPrefix: "/portfolio-leonardo",
+  trailingSlash: true,
 
   images: {
     unoptimized: true,
   },
-
-  trailingSlash: true,
 };
 
 export default nextConfig;
